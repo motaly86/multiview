@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "MultiView",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Watch up to 32 videos simultaneously in a grid overlay",
   "permissions": ["storage", "contextMenus", "activeTab", "*://*.youtube.com/*", "*://*.twitch.tv/*", "https://extensionpay.com/*"],
   "background": {
@@ -24,6 +24,11 @@
         "src/content/grid-overlay.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://extensionpay.com/*"],
+      "js": ["src/shared/ExtPay.js"],
+      "run_at": "document_start"
     }
   ],
   "browser_action": {

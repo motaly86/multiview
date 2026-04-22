@@ -9,10 +9,10 @@
 // In both cases `ExtPay` is expected to be a global by the time this file runs.
 
 const MultiViewLicense = (() => {
-  const EXTENSION_ID = 'multiview-grid'; // must match the slug registered at extensionpay.com
+  const EXTENSION_ID = 'multiview'; // matches the slug registered at extensionpay.com
   const FREE_LIMIT = 4;
   const PRO_LIMIT = 32;
-  const CACHE_TTL_MS = 60 * 60 * 1000; // 1h
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5min — short enough that a missed onPaid event resolves quickly
   const GRACE_MS = 7 * 24 * 60 * 60 * 1000; // offline grace
 
   const api = typeof browser !== 'undefined' ? browser : chrome;
@@ -68,8 +68,21 @@ const MultiViewLicense = (() => {
     return { tier: 'free', limit: FREE_LIMIT, paid: false, stale: !fresh };
   }
 
-  async function openPaymentPage() { ensure().openPaymentPage(); }
-  async function openLoginPage() { ensure().openLoginPage(); }
+  async function invalidate() {
+    cached = null;
+    try { await api.storage.local.remove('mv_license'); } catch (e) {}
+  }
+
+  async function openPaymentPage() {
+    // Invalidate the cache so the next getStatus() refetches — catches cases
+    // where the onPaid listener misses the post-checkout event.
+    await invalidate();
+    ensure().openPaymentPage();
+  }
+  async function openLoginPage() {
+    await invalidate();
+    ensure().openLoginPage();
+  }
 
   // Background-only: subscribes to payment events so getUser() syncs after a
   // successful checkout. Must be called once at service-worker startup.
