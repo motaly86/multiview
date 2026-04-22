@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 340px;
+      max-height: 500px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #111;
+      color: #eee;
+      font-size: 13px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+    }
+    .header-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #a5b4fc;
+    }
+    .header-count {
+      font-size: 11px;
+      color: #888;
+      margin-left: auto;
+    }
+    .actions {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #222;
+    }
+    .btn {
+      flex: 1;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #ddd;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
+    }
+    .btn:hover { background: #3a3a3a; }
+    .btn.primary { background: #4338ca; border-color: #6366f1; color: white; }
+    .btn.primary:hover { background: #4f46e5; }
+    .btn.danger { color: #f87171; }
+    .btn.danger:hover { background: #451a1a; border-color: #f87171; }
+    .paste-row {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px;
+      border-bottom: 1px solid #222;
+    }
+    .paste-input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #eee;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      font-family: inherit;
+    }
+    .paste-input:focus { border-color: #6366f1; }
+    .paste-input::placeholder { color: #555; }
+    .queue {
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    .queue-item:hover { background: #1a1a1a; }
+    .queue-thumb {
+      width: 48px;
+      height: 36px;
+      border-radius: 4px;
+      background: #222;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .queue-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .queue-title {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .queue-site {
+      font-size: 10px;
+      color: #888;
+      text-transform: capitalize;
+    }
+    .queue-remove {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      flex-shrink: 0;
+    }
+    .queue-remove:hover { color: #f87171; }
+    .empty {
+      padding: 30px 14px;
+      text-align: center;
+      color: #555;
+    }
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .tier-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      margin-left: 8px;
+    }
+    .tier-pill.free { background: #3b1d4a; color: #f0abfc; }
+    .tier-pill.free:hover { background: #581c87; }
+    .tier-pill.pro { background: #064e3b; color: #6ee7b7; cursor: default; }
+    .upsell {
+      display: none;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, #312e81, #581c87);
+      border-bottom: 1px solid #444;
+      font-size: 12px;
+    }
+    .upsell.visible { display: block; }
+    .upsell-title { font-weight: 600; margin-bottom: 4px; }
+    .upsell-sub { color: #cbd5e1; font-size: 11px; margin-bottom: 8px; }
+    .upsell button {
+      width: 100%;
+      background: #6366f1;
+      border: none;
+      color: white;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .upsell button:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="header-title">MultiView</span>
+    <span class="header-count" id="count">0 / 4</span>
+    <button class="tier-pill free" id="tierPill" hidden>Upgrade</button>
+  </div>
+  <div class="upsell" id="upsell">
+    <div class="upsell-title">You've hit the free limit</div>
+    <div class="upsell-sub">Unlock up to 32 streams with a one-time $9.99 purchase.</div>
+    <button id="upsellCta">Upgrade to Pro</button>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="tileWindows">&#9638; Tile Windows</button>
+    <button class="btn" id="closeTiles">Close Tiles</button>
+    <button class="btn" id="openGrid">Queue</button>
+    <button class="btn danger" id="clearAll">Clear All</button>
+  </div>
+  <div class="paste-row">
+    <input class="paste-input" id="pasteUrl" placeholder="Paste video URL..." />
+    <button class="btn" id="addUrl">Add</button>
+  </div>
+  <div class="queue" id="queue"></div>
+
+  <script src="../shared/ExtPay.js"></script>
+  <script src="../shared/license.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

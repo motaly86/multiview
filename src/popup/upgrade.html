@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MultiView Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: radial-gradient(ellipse at top, #1e1b4b, #0a0a0a);
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .wrap { max-width: 760px; width: 100%; }
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #a5b4fc, #f0abfc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .sub { color: #94a3b8; font-size: 16px; margin-bottom: 32px; }
+    .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .plan {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .plan.featured { border-color: #6366f1; box-shadow: 0 0 0 1px #6366f1; }
+    .plan-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+    }
+    .plan-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .plan-price { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+    .plan-price small { font-size: 14px; font-weight: 500; color: #94a3b8; }
+    .plan-blurb { color: #94a3b8; font-size: 13px; margin-bottom: 16px; }
+    ul.feats {
+      list-style: none;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    ul.feats li {
+      padding: 6px 0;
+      font-size: 13px;
+      color: #d4d4d8;
+      display: flex;
+      gap: 8px;
+    }
+    ul.feats li::before { content: "✓"; color: #22c55e; font-weight: 700; }
+    .cta {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .cta.primary { background: #6366f1; color: white; }
+    .cta.primary:hover { background: #4f46e5; }
+    .cta.secondary { background: #27272a; color: #e4e4e7; border: 1px solid #3f3f46; }
+    .cta.secondary:hover { background: #3f3f46; }
+    .login-row {
+      text-align: center;
+      color: #71717a;
+      font-size: 13px;
+    }
+    .login-row a { color: #a5b4fc; cursor: pointer; text-decoration: underline; }
+    .status {
+      background: #064e3b;
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .status.visible { display: block; }
+    @media (max-width: 600px) { .plans { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>MultiView Pro</h1>
+    <p class="sub">Unlock the full grid. Watch up to 32 streams side by side.</p>
+
+    <div class="status" id="status"></div>
+
+    <div class="plans">
+      <div class="plan featured">
+        <span class="plan-tag">Best value</span>
+        <div class="plan-name">Lifetime</div>
+        <div class="plan-price">$9.99 <small>once</small></div>
+        <div class="plan-blurb">One payment. Yours forever, all future updates included.</div>
+        <ul class="feats">
+          <li>Up to 32 simultaneous streams</li>
+          <li>Tile windows + grid view</li>
+          <li>YouTube, Twitch, and any embed</li>
+          <li>All future features</li>
+        </ul>
+        <button class="cta primary" id="buyLifetime">Buy lifetime — $9.99</button>
+      </div>
+
+      <div class="plan">
+        <span class="plan-tag">Free</span>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$0</div>
+        <div class="plan-blurb">Try it out with up to 4 streams.</div>
+        <ul class="feats">
+          <li>Up to 4 simultaneous streams</li>
+          <li>Tile windows + grid view</li>
+          <li>YouTube, Twitch, generic embeds</li>
+        </ul>
+        <button class="cta secondary" id="closeBtn">Keep using free</button>
+      </div>
+    </div>
+
+    <p class="login-row">
+      Already paid on another device? <a id="loginLink">Restore purchase</a>
+    </p>
+  </div>
+
+  <script src="../shared/ExtPay.js"></script>
+  <script src="../shared/license.js"></script>
+  <script src="upgrade.js"></script>
+</body>
+</html>

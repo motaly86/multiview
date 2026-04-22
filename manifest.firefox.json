@@ -1,0 +1,56 @@
+{
+  "manifest_version": 2,
+  "name": "MultiView",
+  "version": "1.0.0",
+  "description": "Watch up to 32 videos simultaneously in a grid overlay",
+  "permissions": ["storage", "contextMenus", "activeTab", "*://*.youtube.com/*", "*://*.twitch.tv/*", "https://extensionpay.com/*"],
+  "background": {
+    "scripts": ["src/shared/ExtPay.js", "src/shared/license.js", "src/background/background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*", "*://*.twitch.tv/*", "<all_urls>"],
+      "js": [
+        "src/shared/storage.js",
+        "src/shared/grid-engine.js",
+        "src/shared/sites/youtube.js",
+        "src/shared/sites/twitch.js",
+        "src/shared/sites/generic.js",
+        "src/content/grid-overlay.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css",
+        "src/content/grid-overlay.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "commands": {
+    "toggle-grid": {
+      "suggested_key": {
+        "default": "Alt+M",
+        "mac": "Alt+M"
+      },
+      "description": "Toggle MultiView grid overlay"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "multiview@extension"
+    }
+  }
+}

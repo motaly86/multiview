@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "MultiView",
+  "version": "1.0.1",
+  "description": "Watch up to 32 videos simultaneously in a grid or tiled windows",
+  "permissions": ["storage", "contextMenus", "activeTab"],
+  "host_permissions": ["https://extensionpay.com/*"],
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*", "*://*.twitch.tv/*", "<all_urls>"],
+      "js": [
+        "src/shared/sites/youtube.js",
+        "src/shared/sites/twitch.js",
+        "src/shared/sites/generic.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "commands": {
+    "toggle-grid": {
+      "suggested_key": {
+        "default": "Alt+M",
+        "mac": "Alt+M"
+      },
+      "description": "Open MultiView grid"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

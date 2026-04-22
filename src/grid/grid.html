@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MultiView</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #0a0a0a; color: #eee; font-family: system-ui, -apple-system, sans-serif; }
+
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: #111;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .toolbar-title { font-weight: 700; font-size: 16px; color: #a5b4fc; margin-right: 8px; }
+    .toolbar-count { font-size: 12px; color: #888; margin-right: auto; }
+    .btn {
+      background: #2a2a2a; border: 1px solid #444; color: #ddd;
+      padding: 8px 16px; border-radius: 6px; font-size: 13px;
+      cursor: pointer; transition: background 0.15s; font-family: inherit; white-space: nowrap;
+    }
+    .btn:hover { background: #3a3a3a; border-color: #666; }
+    .btn.primary { background: #4338ca; border-color: #6366f1; color: white; }
+    .btn.primary:hover { background: #4f46e5; }
+    .btn.danger { color: #f87171; }
+    .btn.danger:hover { background: #451a1a; border-color: #f87171; }
+
+    /* Main content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Queue list */
+    .queue-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .queue-card {
+      background: #181818;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.15s;
+    }
+    .queue-card:hover { transform: scale(1.02); }
+    .queue-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #222;
+      object-fit: cover;
+      display: block;
+    }
+    .queue-thumb-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #444;
+      font-size: 28px;
+    }
+    .queue-card-info {
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .queue-card-title {
+      font-size: 12px;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .queue-card-site {
+      font-size: 10px;
+      color: #888;
+      text-transform: capitalize;
+      flex-shrink: 0;
+    }
+    .queue-card-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.7);
+      border: none;
+      color: #aaa;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .queue-card:hover .queue-card-remove { opacity: 1; }
+    .queue-card-remove:hover { color: #f87171; background: rgba(0,0,0,0.9); }
+
+    /* Empty state */
+    .empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: #555;
+      gap: 12px;
+      text-align: center;
+    }
+    .empty-icon { font-size: 48px; opacity: 0.4; }
+    .empty-steps { font-size: 13px; line-height: 1.8; color: #666; }
+    .empty-steps strong { color: #a5b4fc; }
+
+    /* Paste bar */
+    .paste-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      background: #111;
+      border-top: 1px solid #333;
+      flex-shrink: 0;
+    }
+    .paste-input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #eee;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+    .paste-input:focus { border-color: #6366f1; }
+    .paste-input::placeholder { color: #555; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="toolbar">
+      <span class="toolbar-title">MultiView</span>
+      <span class="toolbar-count" id="count">0 / 32 videos</span>
+      <button class="btn primary" id="tileWindows">&#9638; Tile Windows</button>
+      <button class="btn" id="closeTiles">Close Tiles</button>
+      <button class="btn danger" id="clearAll">Clear All</button>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="paste-bar">
+      <input class="paste-input" id="pasteInput" placeholder="Paste a YouTube, Twitch, or video URL and press Enter..." />
+      <button class="btn" id="addUrlBtn">Add</button>
+    </div>
+  </div>
+
+  <script src="grid.js"></script>
+</body>
+</html>

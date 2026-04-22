@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MultiView - Demo Preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #eee; font-family: system-ui, -apple-system, sans-serif; }
+
+    /* ── Simulated YouTube browse page ── */
+    .demo-page {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .demo-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #222;
+    }
+    .demo-logo {
+      width: 40px; height: 40px; border-radius: 8px;
+      display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; overflow: hidden;
+    }
+    .demo-logo div:nth-child(1) { background: #6366f1; }
+    .demo-logo div:nth-child(2) { background: #ec4899; }
+    .demo-logo div:nth-child(3) { background: #22c55e; }
+    .demo-logo div:nth-child(4) { background: #fbbf24; }
+    .demo-header h1 { font-size: 20px; font-weight: 700; color: #a5b4fc; }
+    .demo-header .subtitle { font-size: 13px; color: #666; margin-left: auto; }
+
+    .demo-instructions {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.6;
+    }
+    .demo-instructions strong { color: #a5b4fc; }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .demo-card {
+      background: #181818;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s;
+      position: relative;
+    }
+    .demo-card:hover { transform: scale(1.02); }
+    .demo-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #222;
+      position: relative;
+      overflow: hidden;
+    }
+    .demo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .demo-card-info { padding: 10px 12px; }
+    .demo-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .demo-card-meta { font-size: 11px; color: #888; }
+
+    /* ── The "+" badge (same as extension) ── */
+    .multiview-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      background: rgba(99, 102, 241, 0.9);
+      color: white;
+      border: 2px solid white;
+      border-radius: 50%;
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 28px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.15s, background 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      user-select: none;
+    }
+    .demo-thumb:hover .multiview-badge { opacity: 1; }
+    .multiview-badge:hover { transform: scale(1.15); background: rgba(99, 102, 241, 1); }
+    .multiview-badge.added {
+      background: rgba(34, 197, 94, 0.95) !important;
+      opacity: 1;
+    }
+    @keyframes flash { 0%{box-shadow:0 0 0 0 rgba(34,197,94,0.7)} 70%{box-shadow:0 0 0 12px rgba(34,197,94,0)} 100%{box-shadow:0 0 0 0 rgba(34,197,94,0)} }
+    .multiview-badge.flash { animation: flash 0.6s ease-out; }
+
+    /* ── Queue counter floating button ── */
+    .demo-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #4338ca;
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    .demo-fab:hover { transform: scale(1.05); box-shadow: 0 4px 28px rgba(99,102,241,0.6); }
+    .demo-fab .count {
+      background: white;
+      color: #4338ca;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    /* ── Grid Overlay (exact replica) ── */
+    .multiview-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.94);
+      z-index: 999999;
+      display: none;
+      flex-direction: column;
+    }
+    .multiview-overlay.active { display: flex; }
+
+    .multiview-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: #111;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .multiview-toolbar-title { font-weight: 700; font-size: 15px; color: #a5b4fc; margin-right: 8px; }
+    .multiview-toolbar-count { font-size: 12px; color: #888; margin-right: auto; }
+
+    .mv-btn {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #ddd;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+    .mv-btn:hover { background: #3a3a3a; border-color: #666; }
+    .mv-btn.danger { color: #f87171; }
+    .mv-btn.danger:hover { background: #451a1a; border-color: #f87171; }
+    .mv-btn-close {
+      background: none; border: none; color: #888;
+      font-size: 26px; cursor: pointer; padding: 0 4px; line-height: 1; margin-left: 8px;
+    }
+    .mv-btn-close:hover { color: white; }
+
+    .mv-layout-select {
+      background: #2a2a2a; border: 1px solid #444; color: #ddd;
+      padding: 6px 8px; border-radius: 6px; font-size: 12px; font-family: inherit;
+    }
+
+    .multiview-grid-area {
+      flex: 1;
+      display: grid;
+      gap: 3px;
+      padding: 3px;
+      overflow: hidden;
+    }
+
+    .mv-cell {
+      position: relative;
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .mv-cell iframe { width: 100%; height: 100%; border: none; }
+
+    .mv-cell-controls {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .mv-cell:hover .mv-cell-controls { opacity: 1; }
+    .mv-cell-title { font-size: 11px; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .mv-cell-btn {
+      background: rgba(255,255,255,0.15); border: none; color: white;
+      width: 26px; height: 26px; border-radius: 4px; cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .mv-cell-btn:hover { background: rgba(255,255,255,0.3); }
+    .mv-cell-btn.remove:hover { background: rgba(239,68,68,0.6); }
+
+    .mv-paste-bar {
+      display: flex; gap: 8px; padding: 8px 16px;
+      background: #111; border-top: 1px solid #333; flex-shrink: 0;
+    }
+    .mv-paste-input {
+      flex: 1; background: #1a1a1a; border: 1px solid #444; color: #eee;
+      padding: 8px 12px; border-radius: 6px; font-size: 13px; outline: none; font-family: inherit;
+    }
+    .mv-paste-input:focus { border-color: #6366f1; }
+    .mv-paste-input::placeholder { color: #555; }
+  </style>
+</head>
+<body>
+
+<!-- ── Simulated browse page ── -->
+<div class="demo-page" id="browsePage">
+  <div class="demo-header">
+    <div class="demo-logo"><div></div><div></div><div></div><div></div></div>
+    <h1>MultiView</h1>
+    <span class="subtitle">Demo &mdash; click the + badges on videos to add them, then open the grid</span>
+  </div>
+
+  <div class="demo-instructions">
+    <strong>How it works:</strong> Hover over any video thumbnail and click the <strong>+</strong> badge to queue it.
+    Then click the <strong>"Open Grid"</strong> button (bottom-right) to see them all playing at once.
+    Press <strong>Escape</strong> or the <strong>&times;</strong> button to close the grid and add more.
+  </div>
+
+  <div class="demo-grid" id="videoGrid"></div>
+</div>
+
+<!-- ── Floating action button ── -->
+<button class="demo-fab" id="fabBtn" onclick="openGrid()">
+  Open Grid <span class="count" id="fabCount">0</span>
+</button>
+
+<!-- ── Grid Overlay ── -->
+<div class="multiview-overlay" id="overlay">
+  <div class="multiview-toolbar">
+    <span class="multiview-toolbar-title">MultiView</span>
+    <span class="multiview-toolbar-count" id="overlayCount">0 / 32</span>
+    <button class="mv-btn" onclick="controlAll('play')">&#9654; All</button>
+    <button class="mv-btn" onclick="controlAll('pause')">&#10074;&#10074; All</button>
+    <button class="mv-btn" onclick="controlAll('mute')">&#128263; Mute</button>
+    <button class="mv-btn" onclick="controlAll('unmute')">&#128266; Unmute</button>
+    <select class="mv-layout-select" id="layoutSelect" onchange="renderGrid()">
+      <option value="auto">Auto Layout</option>
+      <option value="2">2x2</option>
+      <option value="3">3x3</option>
+      <option value="4">4x4</option>
+      <option value="5">5x5</option>
+    </select>
+    <button class="mv-btn danger" onclick="clearAll()">Clear All</button>
+    <button class="mv-btn-close" onclick="closeGrid()">&times;</button>
+  </div>
+  <div class="multiview-grid-area" id="gridArea"></div>
+  <div class="mv-paste-bar">
+    <input class="mv-paste-input" id="pasteInput" placeholder="Paste a YouTube URL and press Enter..." onkeydown="if(event.key==='Enter')addFromPaste()" />
+    <button class="mv-btn" onclick="addFromPaste()">Add</button>
+  </div>
+</div>
+
+<script>
+// Sample videos (public YouTube embeds)
+const sampleVideos = [
+  { id: 'dQw4w9WgXcQ', title: 'Rick Astley - Never Gonna Give You Up' },
+  { id: 'jNQXAC9IVRw', title: 'Me at the zoo' },
+  { id: '9bZkp7q19f0', title: 'PSY - GANGNAM STYLE' },
+  { id: 'kJQP7kiw5Fk', title: 'Luis Fonsi - Despacito' },
+  { id: 'JGwWNGJdvx8', title: 'Ed Sheeran - Shape of You' },
+  { id: 'RgKAFK5djSk', title: 'Wiz Khalifa - See You Again' },
+  { id: 'OPf0YbXqDm0', title: 'Mark Ronson - Uptown Funk' },
+  { id: 'CevxZvSJLk8', title: 'Katy Perry - Roar' },
+  { id: 'hT_nvWreIhg', title: 'OneRepublic - Counting Stars' },
+  { id: 'fRh_vgS2dFE', title: 'Justin Bieber - Sorry' },
+  { id: 'YqeW9_5kURI', title: 'Major Lazer - Lean On' },
+  { id: 'nfWlot6h_JM', title: 'Taylor Swift - Shake It Off' },
+];
+
+let queue = [];
+
+// Build browse page
+const videoGrid = document.getElementById('videoGrid');
+sampleVideos.forEach(v => {
+  const card = document.createElement('div');
+  card.className = 'demo-card';
+  card.innerHTML = `
+    <div class="demo-thumb">
+      <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="" loading="lazy" />
+      <div class="multiview-badge" onclick="event.stopPropagation(); addVideo('${v.id}', '${v.title.replace(/'/g,"\\'")}', this)">+</div>
+    </div>
+    <div class="demo-card-info">
+      <div class="demo-card-title">${v.title}</div>
+      <div class="demo-card-meta">YouTube &middot; Music Video</div>
+    </div>
+  `;
+  videoGrid.appendChild(card);
+});
+
+function addVideo(id, title, badgeEl) {
+  if (queue.find(v => v.id === id)) return;
+  if (queue.length >= 32) return;
+  queue.push({ id, title });
+  badgeEl.textContent = '✓';
+  badgeEl.classList.add('added', 'flash');
+  setTimeout(() => badgeEl.classList.remove('flash'), 600);
+  updateCount();
+}
+
+function updateCount() {
+  document.getElementById('fabCount').textContent = queue.length;
+  document.getElementById('overlayCount').textContent = `${queue.length} / 32 videos`;
+}
+
+function openGrid() {
+  document.getElementById('overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  renderGrid();
+}
+
+function closeGrid() {
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderGrid() {
+  const area = document.getElementById('gridArea');
+  const sel = document.getElementById('layoutSelect').value;
+
+  if (queue.length === 0) {
+    area.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#555;font-size:16px;gap:12px;"><div style="font-size:48px;opacity:0.4;">📺</div><div>No videos yet</div><div style="font-size:13px;">Close this overlay and click the + badges to add videos</div></div>';
+    area.style.gridTemplateColumns = '1fr';
+    area.style.gridTemplateRows = '1fr';
+    return;
+  }
+
+  let cols;
+  if (sel === 'auto') {
+    if (queue.length <= 1) cols = 1;
+    else if (queue.length <= 4) cols = 2;
+    else if (queue.length <= 9) cols = 3;
+    else if (queue.length <= 16) cols = 4;
+    else cols = 5;
+  } else {
+    cols = parseInt(sel);
+  }
+
+  const rows = Math.ceil(queue.length / cols);
+  area.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  area.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+  area.innerHTML = queue.map(v => `
+    <div class="mv-cell" data-id="${v.id}">
+      <iframe src="https://www.youtube.com/embed/${v.id}?autoplay=1&mute=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+      <div class="mv-cell-controls">
+        <span class="mv-cell-title">${v.title}</span>
+        <button class="mv-cell-btn remove" onclick="removeVideo('${v.id}')" title="Remove">&times;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeVideo(id) {
+  queue = queue.filter(v => v.id !== id);
+  updateCount();
+  renderGrid();
+}
+
+function clearAll() {
+  queue = [];
+  updateCount();
+  renderGrid();
+  // Reset badges
+  document.querySelectorAll('.multiview-badge.added').forEach(b => {
+    b.textContent = '+';
+    b.classList.remove('added');
+  });
+}
+
+function controlAll(cmd) {
+  document.querySelectorAll('.mv-cell iframe').forEach(iframe => {
+    try {
+      const msg = {
+        play: '{"event":"command","func":"playVideo","args":""}',
+        pause: '{"event":"command","func":"pauseVideo","args":""}',
+        mute: '{"event":"command","func":"mute","args":""}',
+        unmute: '{"event":"command","func":"unMute","args":""}',
+      }[cmd];
+      if (msg) iframe.contentWindow.postMessage(msg, '*');
+    } catch {}
+  });
+}
+
+function addFromPaste() {
+  const input = document.getElementById('pasteInput');
+  const url = input.value.trim();
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  if (m) {
+    const id = m[1];
+    if (!queue.find(v => v.id === id)) {
+      queue.push({ id, title: `YouTube ${id}` });
+      input.value = '';
+      updateCount();
+      renderGrid();
+    }
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeGrid();
+});
+</script>
+</body>
+</html>

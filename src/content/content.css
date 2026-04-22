@@ -1,0 +1,130 @@
+/* MultiView - "+" badge on detected videos */
+.multiview-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(99, 102, 241, 0.9);
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 28px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s, background 0.15s;
+  pointer-events: none;
+  font-family: system-ui, sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  user-select: none;
+}
+
+.multiview-badge-container {
+  position: relative;
+}
+
+.multiview-badge-container:hover .multiview-badge {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.multiview-badge:hover {
+  transform: scale(1.15);
+  background: rgba(99, 102, 241, 1);
+}
+
+.multiview-badge.multiview-added {
+  background: rgba(34, 197, 94, 0.95) !important;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.multiview-badge.multiview-added::after {
+  content: '✓';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.multiview-badge.multiview-added span {
+  display: none;
+}
+
+/* Flash animation when added */
+@keyframes multiview-flash {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.multiview-badge.multiview-flash {
+  animation: multiview-flash 0.6s ease-out;
+}
+
+/* Floating control button on tiled windows */
+.multiview-tile-control {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2147483647;
+  display: flex;
+  gap: 4px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.multiview-tile-btn {
+  background: rgba(17, 17, 17, 0.85);
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.multiview-tile-btn:hover {
+  background: rgba(30, 30, 30, 0.95);
+  border-color: #666;
+}
+
+.multiview-tile-btn.close-all {
+  color: #f87171;
+}
+
+.multiview-tile-btn.close-all:hover {
+  background: rgba(127, 29, 29, 0.9);
+  border-color: #f87171;
+}
+
+.multiview-tile-logo {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.multiview-tile-logo div:nth-child(1) { background: #6366f1; }
+.multiview-tile-logo div:nth-child(2) { background: #ec4899; }
+.multiview-tile-logo div:nth-child(3) { background: #22c55e; }
+.multiview-tile-logo div:nth-child(4) { background: #fbbf24; }

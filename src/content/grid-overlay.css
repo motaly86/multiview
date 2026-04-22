@@ -1,0 +1,237 @@
+/* MultiView Grid Overlay */
+.multiview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 999999;
+  display: none;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: white;
+}
+
+.multiview-overlay.active {
+  display: flex;
+}
+
+/* Toolbar */
+.multiview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #111;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.multiview-toolbar-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: #a5b4fc;
+  margin-right: 8px;
+}
+
+.multiview-toolbar-count {
+  font-size: 12px;
+  color: #888;
+  margin-right: auto;
+}
+
+.multiview-btn {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.multiview-btn:hover {
+  background: #3a3a3a;
+  border-color: #666;
+}
+
+.multiview-btn.active {
+  background: #4338ca;
+  border-color: #6366f1;
+  color: white;
+}
+
+.multiview-btn.danger {
+  color: #f87171;
+}
+
+.multiview-btn.danger:hover {
+  background: #451a1a;
+  border-color: #f87171;
+}
+
+.multiview-btn-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  margin-left: 8px;
+}
+
+.multiview-btn-close:hover {
+  color: white;
+}
+
+/* Layout selector dropdown */
+.multiview-layout-select {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #ddd;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Grid Container */
+.multiview-grid {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  padding: 2px;
+  overflow: hidden;
+}
+
+/* Grid Cell */
+.multiview-cell {
+  position: relative;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+.multiview-cell iframe,
+.multiview-cell video {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.multiview-cell.maximized {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  z-index: 10;
+}
+
+/* Cell controls (shown on hover) */
+.multiview-cell-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.multiview-cell:hover .multiview-cell-controls {
+  opacity: 1;
+}
+
+.multiview-cell-title {
+  font-size: 11px;
+  color: #ccc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.multiview-cell-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.multiview-cell-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.multiview-cell-btn.remove:hover {
+  background: rgba(239, 68, 68, 0.6);
+}
+
+/* Empty state */
+.multiview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 16px;
+  gap: 12px;
+}
+
+.multiview-empty-icon {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+/* Paste URL input in overlay */
+.multiview-paste-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #111;
+  border-top: 1px solid #333;
+  flex-shrink: 0;
+}
+
+.multiview-paste-input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  color: #eee;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.multiview-paste-input:focus {
+  border-color: #6366f1;
+}
+
+.multiview-paste-input::placeholder {
+  color: #555;
+}
