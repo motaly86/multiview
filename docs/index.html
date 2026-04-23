@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>MultiView — Watch up to 32 videos simultaneously</title>
+<meta name="description" content="Watch up to 32 YouTube, Twitch, and embedded videos side by side in a grid or tiled windows. Free for 4 streams, one-time $9.99 Pro upgrade unlocks 32." />
+<meta property="og:title" content="MultiView — Watch up to 32 videos simultaneously" />
+<meta property="og:description" content="Tile live video across your screen. Free for 4 streams, $9.99 Pro unlocks 32." />
+<meta property="og:url" content="https://multiviewapp.net" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='14' height='14' x='1' y='1' rx='2' fill='%238b5cf6'/><rect width='14' height='14' x='17' y='1' rx='2' fill='%23ec4899'/><rect width='14' height='14' x='1' y='17' rx='2' fill='%2310b981'/><rect width='14' height='14' x='17' y='17' rx='2' fill='%23eab308'/></svg>" />
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-2: #a5b4fc;
+    --accent-glow: rgba(99,102,241,.25);
+    --bg: #050505;
+    --bg-2: #0a0a0a;
+    --panel: #111113;
+    --panel-2: #16161a;
+    --border: #26262a;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --muted-2: #6b7280;
+    --success: #10b981;
+    --success-dim: #064e3b;
+    --success-text: #6ee7b7;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 500 16px/1.55 ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ========== TOP BAR ========== */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 16px 32px;
+    background: rgba(5,5,5,.72);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.015em;
+  }
+  .logo-mark {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: grid;
+    grid-template: 1fr 1fr / 1fr 1fr;
+    gap: 1.5px;
+  }
+  .logo-mark span {
+    border-radius: 1.5px;
+  }
+  .logo-mark span:nth-child(1) { background: #8b5cf6; }
+  .logo-mark span:nth-child(2) { background: #ec4899; }
+  .logo-mark span:nth-child(3) { background: #10b981; }
+  .logo-mark span:nth-child(4) { background: #eab308; }
+  .nav-links {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    padding: 7px 14px;
+    background: var(--accent);
+    color: white !important;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  .nav-cta:hover { background: #4f46e5; }
+
+  /* ========== HERO ========== */
+  .hero {
+    position: relative;
+    padding: 140px 24px 60px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -200px; left: 50%;
+    width: 1200px; height: 800px;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(600px 400px at 50% 50%, rgba(99,102,241,.18), transparent 70%),
+      radial-gradient(500px 300px at 30% 40%, rgba(139,92,246,.12), transparent 70%),
+      radial-gradient(500px 300px at 70% 40%, rgba(236,72,153,.10), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero > * { position: relative; z-index: 1; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: rgba(99,102,241,.08);
+    border: 1px solid rgba(99,102,241,.2);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-2);
+    letter-spacing: 0.02em;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+  }
+
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    max-width: 900px;
+    margin: 0 auto 20px;
+  }
+  .hero h1 .gradient {
+    background: linear-gradient(90deg, #a5b4fc, #f0abfc, #6ee7b7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero p.subtitle {
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 auto 36px;
+  }
+  .hero .ctas {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1;
+    border: 1px solid transparent;
+    transition: transform .15s, background .2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 8px 24px var(--accent-glow);
+  }
+  .btn.primary:hover { background: #4f46e5; }
+  .btn.secondary {
+    background: rgba(255,255,255,.05);
+    color: var(--text);
+    border-color: rgba(255,255,255,.1);
+  }
+  .btn.secondary:hover { background: rgba(255,255,255,.08); }
+  .btn .icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .micro-proof {
+    font-size: 13px;
+    color: var(--muted-2);
+    margin-top: 4px;
+  }
+  .micro-proof strong { color: var(--text); }
+
+  /* ========== DEMO FRAME ========== */
+  .demo-frame-wrap {
+    max-width: 1160px;
+    margin: 60px auto 0;
+    padding: 0 24px;
+    position: relative;
+  }
+  .demo-frame-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -40px -80px;
+    background: radial-gradient(600px 300px at 50% 50%, rgba(99,102,241,.25), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .demo-iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--bg-2);
+    box-shadow:
+      0 40px 80px rgba(0,0,0,.5),
+      0 0 0 1px rgba(255,255,255,.04);
+    display: block;
+  }
+
+  /* ========== SECTIONS ========== */
+  section {
+    padding: 100px 24px;
+    position: relative;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  h2 {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  h2 .gradient {
+    background: linear-gradient(90deg, #a5b4fc, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .section-sub {
+    text-align: center;
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 560px;
+    margin: 0 auto 60px;
+  }
+
+  /* ========== HOW IT WORKS ========== */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .step {
+    padding: 28px 24px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+  }
+  .step-num {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 44px;
+    font-weight: 800;
+    background: linear-gradient(180deg, rgba(255,255,255,.06), transparent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+  .step-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: rgba(99,102,241,.12);
+    color: var(--accent-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 20px;
+  }
+  .step h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .step p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ========== USE CASES ========== */
+  .use-cases {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .use-card {
+    padding: 24px 22px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color .2s, transform .15s;
+  }
+  .use-card:hover {
+    border-color: rgba(99,102,241,.4);
+    transform: translateY(-2px);
+  }
+  .use-emoji {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .use-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .use-card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ========== PRICING ========== */
+  .pricing {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .plan {
+    padding: 32px 28px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+  }
+  .plan.featured {
+    border-color: rgba(99,102,241,.5);
+    box-shadow: 0 0 0 1px rgba(99,102,241,.3), 0 20px 60px var(--accent-glow);
+  }
+  .plan-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .plan.free .plan-tag { background: rgba(255,255,255,.06); color: var(--muted); }
+  .plan.featured .plan-tag { background: var(--accent); color: white; }
+  .plan-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .plan-price {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .plan-price small {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .plan-blurb {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .plan-feats {
+    list-style: none;
+    margin-bottom: 24px;
+  }
+  .plan-feats li {
+    padding: 7px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .plan-feats li::before {
+    content: "✓";
+    color: var(--success);
+    font-weight: 700;
+  }
+  .plan .btn { width: 100%; justify-content: center; }
+
+  /* ========== FAQ ========== */
+  .faq {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .faq details {
+    border-top: 1px solid var(--border);
+    padding: 18px 0;
+  }
+  .faq details:last-child { border-bottom: 1px solid var(--border); }
+  .faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+";
+    font-size: 22px;
+    color: var(--muted);
+    font-weight: 300;
+    transition: transform .2s;
+  }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details[open] summary { color: var(--accent-2); }
+  .faq .answer {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .faq .answer a { color: var(--accent-2); }
+  .faq .answer a:hover { text-decoration: underline; }
+
+  /* ========== FOOTER ========== */
+  footer {
+    padding: 60px 24px 40px;
+    border-top: 1px solid var(--border);
+    color: var(--muted-2);
+    font-size: 13px;
+  }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .footer-inner .logo { font-size: 14px; }
+  .footer-links {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 780px) {
+    .topbar { padding: 14px 18px; }
+    .nav-links { gap: 14px; }
+    .nav-links a:not(.nav-cta) { display: none; }
+    .hero { padding: 110px 18px 40px; }
+    section { padding: 70px 18px; }
+    .steps { grid-template-columns: 1fr; }
+    .pricing { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="#" class="logo">
+    <span class="logo-mark"><span></span><span></span><span></span><span></span></span>
+    MultiView
+  </a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+    <a href="https://chromewebstore.google.com/detail/multiview/hbbgjnahoabdlcfpmlpomhajjajchbjn" class="nav-cta" target="_blank" rel="noopener">Install</a>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="eyebrow">Available on Chrome &amp; Firefox</div>
+  <h1>Watch <span class="gradient">32 streams</span> side by side.</h1>
+  <p class="subtitle">MultiView tiles live video across your screen — YouTube, Twitch, anything with a URL. Free for 4 streams, one-time $9.99 Pro unlocks 32.</p>
+  <div class="ctas">
+    <a href="https://chromewebstore.google.com/detail/multiview/hbbgjnahoabdlcfpmlpomhajjajchbjn" class="btn primary" target="_blank" rel="noopener">
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.13.24-2.21.66-3.18l4.85 8.4C8.96 18.54 10.4 20 12 20zm.35-2-4.87-8.44C8.23 8.09 9.46 7.5 12 7.5c3.06 0 5.56 2.24 5.56 5.5 0 3.26-2.5 5-5.21 5zm5.3-9.83C16.88 6.18 14.57 5 12 5 9.78 5 8.08 5.93 7 7.35l3.56 6.17C11.18 12.74 11.58 12 12 12c.42 0 .82.74 1.44 1.52L17.65 8.17zM19.34 8h-5.33C15.74 9.09 17 10.88 17 13c0 1.73-.62 3.21-1.65 4.18L11.5 20h.5c4.41 0 8-3.59 8-8 0-1.45-.39-2.81-1.06-4z"/></svg>
+      Install on Chrome
+    </a>
+    <a href="https://addons.mozilla.org/en-US/firefox/addon/multiview-ext/" class="btn secondary" target="_blank" rel="noopener">
+      <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.97 9.66a10 10 0 00-3.5-5.5 9.9 9.9 0 00-2.45-1.56 10 10 0 00-10.4 2.4 10 10 0 00-1.92 11.24 10 10 0 009.05 5.75 10 10 0 009.84-7.9 10 10 0 00-.62-4.43zm-8.5-4.43a3.5 3.5 0 012.2.8 7 7 0 00-3.43 1.78 3.5 3.5 0 011.24-2.58zm-6.47 6.67a6 6 0 015.7-6.14 5.5 5.5 0 014.27 1.8 7 7 0 00-2.27 6 6 6 0 01-7.7-1.66zm9.8 3.36a4 4 0 01-.32.87 7 7 0 01-4.63 3.6 6 6 0 01-4.52-1.02 7.5 7.5 0 005.62-.44 7 7 0 003.85-3z"/></svg>
+      Install on Firefox
+    </a>
+  </div>
+  <p class="micro-proof">Free forever up to 4 streams · <strong>$9.99 lifetime</strong> unlocks 32</p>
+</section>
+
+<div class="demo-frame-wrap">
+  <iframe class="demo-iframe" src="demo/" loading="lazy" title="MultiView demo"></iframe>
+</div>
+
+<section id="how">
+  <div class="container">
+    <h2>How it <span class="gradient">works</span></h2>
+    <p class="section-sub">Three clicks to turn any browser into a multi-stream viewer.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-icon">🔍</div>
+        <h3>Find videos</h3>
+        <p>Browse YouTube, Twitch, or any video site. Right-click any video link and hit "Add to MultiView".</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-icon">➕</div>
+        <h3>Queue them up</h3>
+        <p>Add up to 32 streams to your queue. The extension icon shows your count. Remove or reorder anytime.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-icon">▦</div>
+        <h3>Tile windows</h3>
+        <p>Hit "Tile Windows" — every video opens in its own popup, perfectly arranged in a grid across your screen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2>Built for <span class="gradient">power viewers</span></h2>
+    <p class="section-sub">People who need more than one screen happening at once.</p>
+    <div class="use-cases">
+      <div class="use-card">
+        <div class="use-emoji">⚽</div>
+        <div>
+          <h4>Sports fans</h4>
+          <p>Watch every Champions League game at once.</p>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-emoji">🎮</div>
+        <div>
+          <h4>Esports viewers</h4>
+          <p>Follow multiple Twitch streamers side by side.</p>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-emoji">📈</div>
+        <div>
+          <h4>Traders</h4>
+          <p>Monitor Bloomberg, CNBC, and ticker feeds together.</p>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-emoji">📰</div>
+        <div>
+          <h4>News junkies</h4>
+          <p>BBC, Al Jazeera, Sky News — one glance covers all.</p>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-emoji">🏁</div>
+        <div>
+          <h4>Race weekend</h4>
+          <p>F1 multi-camera feeds tiled across your monitor.</p>
+        </div>
+      </div>
+      <div class="use-card">
+        <div class="use-emoji">🎵</div>
+        <div>
+          <h4>DJs &amp; creators</h4>
+          <p>Compare performances and reaction videos in sync.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="container">
+    <h2>Simple <span class="gradient">pricing</span></h2>
+    <p class="section-sub">Free to try. One payment unlocks everything. No subscriptions, ever.</p>
+    <div class="pricing">
+      <div class="plan free">
+        <span class="plan-tag">Free</span>
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">$0</div>
+        <p class="plan-blurb">Everything you need to try it.</p>
+        <ul class="plan-feats">
+          <li>Up to 4 simultaneous streams</li>
+          <li>Tile Windows + Grid view</li>
+          <li>YouTube, Twitch, generic embeds</li>
+          <li>Right-click + paste URL</li>
+          <li>Keyboard shortcut (Alt+M)</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/multiview/hbbgjnahoabdlcfpmlpomhajjajchbjn" class="btn secondary" target="_blank" rel="noopener">Install free</a>
+      </div>
+      <div class="plan featured">
+        <span class="plan-tag">Lifetime</span>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">$9.99 <small>once</small></div>
+        <p class="plan-blurb">One payment. Yours forever.</p>
+        <ul class="plan-feats">
+          <li>Up to <strong>32</strong> simultaneous streams</li>
+          <li>All future features included</li>
+          <li>Everything in Starter</li>
+          <li>Works on Chrome &amp; Firefox</li>
+          <li>Secure checkout via Stripe</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/multiview/hbbgjnahoabdlcfpmlpomhajjajchbjn" class="btn primary" target="_blank" rel="noopener">Get Pro — $9.99</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container">
+    <h2>Questions</h2>
+    <p class="section-sub">If yours isn't here, <a href="mailto:multiview@duck.com">email us</a>.</p>
+    <div class="faq">
+      <details>
+        <summary>Which browsers are supported?</summary>
+        <div class="answer">Chrome, Edge, Brave, Opera, and Arc (all Chromium-based) plus Firefox. Safari isn't supported yet — the Mac App Store's in-app purchase rules make it a separate build; we may add it later.</div>
+      </details>
+      <details>
+        <summary>Does "Pro" charge me every month?</summary>
+        <div class="answer">No. $9.99 is a one-time payment for a lifetime license. No subscription, no recurring charge. All future features are included.</div>
+      </details>
+      <details>
+        <summary>Does MultiView work across devices?</summary>
+        <div class="answer">Your Pro license is tied to the email you use at checkout. You can restore it on any browser where you install MultiView by clicking "Restore purchase" in the popup.</div>
+      </details>
+      <details>
+        <summary>Do you collect my data?</summary>
+        <div class="answer">No browsing history, no analytics, no tracking, no ads. Your video queue is stored locally in your browser. The optional Pro upgrade uses ExtensionPay (Stripe) — only your email and card info go to them during checkout. Full details in the <a href="privacy.html">privacy policy</a>.</div>
+      </details>
+      <details>
+        <summary>Will it work with Netflix / paid streaming services?</summary>
+        <div class="answer">Only with content that allows embedding. Netflix, HBO, and most subscription services block embedding via DRM, so they won't tile. YouTube, Twitch, Dailymotion, Vimeo, and any publicly embeddable video site work fine.</div>
+      </details>
+      <details>
+        <summary>Is this open source?</summary>
+        <div class="answer">Yes. Source code is on <a href="https://github.com/motaly86/multiview" target="_blank" rel="noopener">GitHub</a>. Licensed under MIT.</div>
+      </details>
+      <details>
+        <summary>I'm having trouble — how do I get support?</summary>
+        <div class="answer">Email <a href="mailto:multiview@duck.com">multiview@duck.com</a> or open an issue on <a href="https://github.com/motaly86/multiview/issues" target="_blank" rel="noopener">GitHub</a>. We usually reply within a day.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark"><span></span><span></span><span></span><span></span></span>
+      MultiView
+    </a>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/motaly86/multiview" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:multiview@duck.com">Support</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

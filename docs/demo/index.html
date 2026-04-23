@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MultiView — Demo</title>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-2: #a5b4fc;
+    --bg: #0a0a0a;
+    --panel: #111;
+    --panel-2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e5e7eb;
+    --muted: #6b7280;
+    --cycle: 16s;
+    --t1: #8b5cf6;
+    --t2: #ec4899;
+    --t3: #10b981;
+    --t4: #eab308;
+    --t5: #06b6d4;
+    --t6: #f97316;
+    --t7: #ef4444;
+    --t8: #84cc16;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(1200px 600px at 50% 40%, #1a1a2e, #050505 70%);
+    color: var(--text);
+    font: 500 14px/1.3 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage-wrap {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .stage {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    transform: scale(var(--fit, 1));
+    transform-origin: center;
+  }
+
+  /* === BROWSER WINDOW === */
+  .browser {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    width: 900px;
+    height: 560px;
+    background: var(--panel-2);
+    border-radius: 12px;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.55),
+      0 0 0 1px rgba(255,255,255,.04);
+    overflow: hidden;
+    opacity: 1;
+    animation: browser-life var(--cycle) infinite cubic-bezier(.2,.7,.3,1);
+  }
+
+  .chrome-bar {
+    height: 44px;
+    background: linear-gradient(#262626, #1f1f1f);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 14px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .tl { display: flex; gap: 7px; }
+  .tl span { width: 12px; height: 12px; border-radius: 50%; }
+  .tl span:nth-child(1) { background: #ff5f57; }
+  .tl span:nth-child(2) { background: #febc2e; }
+  .tl span:nth-child(3) { background: #28c840; }
+  .urlbar {
+    flex: 1;
+    height: 26px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: #888;
+    font-size: 11px;
+    max-width: 560px;
+  }
+  .urlbar::before {
+    content: "🔒";
+    margin-right: 8px;
+    opacity: .6;
+    font-size: 10px;
+  }
+  .toolbar-icons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .ext-icon {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    background:
+      linear-gradient(135deg, var(--t1) 0 50%, var(--t2) 50% 100%) top left/50% 50% no-repeat,
+      linear-gradient(135deg, var(--t3) 0 50%, var(--t4) 50% 100%) bottom right/50% 50% no-repeat,
+      var(--panel);
+    position: relative;
+    box-shadow: 0 0 0 2px transparent;
+    transition: box-shadow .2s;
+  }
+  .ext-icon::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template: 1fr 1fr / 1fr 1fr;
+    gap: 2px;
+    padding: 2px;
+  }
+
+  /* Browser content — a sample YouTube-like page */
+  .browser-body {
+    height: calc(100% - 44px);
+    padding: 24px;
+    background:
+      radial-gradient(400px 300px at 80% 20%, rgba(139,92,246,.15), transparent),
+      radial-gradient(400px 300px at 20% 80%, rgba(99,102,241,.12), transparent),
+      var(--panel);
+    position: relative;
+  }
+  .site-thumbnails {
+    display: grid;
+    grid-template: repeat(2, 1fr) / repeat(3, 1fr);
+    gap: 16px;
+    height: 100%;
+  }
+  .site-thumb {
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  }
+  .site-thumb .meta {
+    position: absolute;
+    left: 12px; bottom: 12px; right: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,.7);
+  }
+  .site-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.5));
+  }
+
+  /* === RIGHT-CLICK CONTEXT MENU === */
+  .cursor {
+    position: absolute;
+    top: 158px;
+    left: 260px;
+    width: 22px;
+    height: 24px;
+    z-index: 20;
+    opacity: 0;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+    pointer-events: none;
+    animation: cursor-life var(--cycle) infinite;
+  }
+  .cursor::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 2 L3 19 L8 15 L11 22 L14 20 L11 13 L18 13 Z' fill='white' stroke='black' stroke-width='1.2' stroke-linejoin='round'/></svg>") no-repeat center / contain;
+  }
+
+  .ctx-menu {
+    position: absolute;
+    top: 175px;
+    left: 275px;
+    min-width: 220px;
+    background: rgba(38, 38, 42, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 8px;
+    padding: 5px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.55);
+    z-index: 19;
+    opacity: 0;
+    transform: translateY(-4px) scale(.96);
+    transform-origin: top left;
+    animation: ctx-life var(--cycle) infinite;
+    font-size: 12px;
+    color: #e5e7eb;
+  }
+  .ctx-item {
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1;
+  }
+  .ctx-item.hl {
+    background: var(--accent);
+    color: white;
+    animation: ctx-hl var(--cycle) infinite;
+  }
+  .ctx-icon {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    background:
+      linear-gradient(135deg, var(--t1) 0 50%, var(--t2) 50% 100%) top left/50% 50% no-repeat,
+      linear-gradient(135deg, var(--t3) 0 50%, var(--t4) 50% 100%) bottom right/50% 50% no-repeat;
+    flex-shrink: 0;
+  }
+  .ctx-sep {
+    height: 1px;
+    background: rgba(255,255,255,.08);
+    margin: 5px 4px;
+  }
+
+  /* === POPUP === */
+  .popup {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    width: 340px;
+    max-height: 500px;
+    background: var(--panel);
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    color: #eee;
+    font-size: 13px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    opacity: 0;
+    transform: translateY(-10px) scale(.96);
+    animation: popup-life var(--cycle) infinite cubic-bezier(.2,.7,.3,1);
+    overflow: hidden;
+  }
+  .popup-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #181818;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .popup-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent-2);
+    letter-spacing: -0.01em;
+  }
+  .popup-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: #9ca3af;
+    font-variant-numeric: tabular-nums;
+  }
+  .pro-pill {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #064e3b;
+    color: #6ee7b7;
+    letter-spacing: .02em;
+  }
+
+  .popup-actions {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .btn {
+    flex: 1;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    color: #ddd;
+    padding: 7px 8px;
+    border-radius: 6px;
+    font: 600 11px/1 inherit;
+    text-align: center;
+    position: relative;
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: #818cf8;
+    color: white;
+    animation: btn-pulse var(--cycle) infinite;
+  }
+
+  .popup-paste {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .paste-input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #888;
+  }
+  .add-btn {
+    padding: 6px 12px;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    font: 600 11px/1 inherit;
+    color: #ddd;
+  }
+
+  .queue {
+    max-height: 240px;
+    overflow: hidden;
+    padding: 6px 0;
+  }
+  .queue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  .queue-thumb {
+    width: 42px; height: 28px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .queue-info { flex: 1; min-width: 0; }
+  .queue-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #e5e7eb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .queue-site {
+    font-size: 10px;
+    color: #6b7280;
+    text-transform: capitalize;
+  }
+
+  .queue-item:nth-child(1) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0); }
+  .queue-item:nth-child(2) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.02); }
+  .queue-item:nth-child(3) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.04); }
+  .queue-item:nth-child(4) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.06); }
+  .queue-item:nth-child(5) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.08); }
+  .queue-item:nth-child(6) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.10); }
+  .queue-item:nth-child(7) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.12); }
+  .queue-item:nth-child(8) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.14); }
+  .queue-item:nth-child(9) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.16); }
+  .queue-item:nth-child(10) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.18); }
+  .queue-item:nth-child(11) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.20); }
+  .queue-item:nth-child(12) { animation: q-in var(--cycle) infinite; animation-delay: calc(var(--cycle) * 0.22); }
+
+  /* Count that animates */
+  .num {
+    display: inline-block;
+    animation: count-up var(--cycle) infinite steps(1);
+  }
+
+  /* === TILE GRID (payoff shot) === */
+  .tile-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template: repeat(3, 1fr) / repeat(4, 1fr);
+    gap: 8px;
+    padding: 30px;
+    opacity: 0;
+    animation: grid-life var(--cycle) infinite cubic-bezier(.2,.7,.3,1);
+  }
+  .tile {
+    background: var(--panel-2);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    transform: scale(.92);
+    opacity: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+  }
+  .tile::before {
+    content: "";
+    position: absolute;
+    top: 8px; left: 8px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+  }
+  .tile::after {
+    content: "● LIVE";
+    position: absolute;
+    top: 6px; left: 18px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #ef4444;
+  }
+  .tile .label {
+    position: absolute;
+    left: 10px; bottom: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.8);
+  }
+  .tile:nth-child(1)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.005); }
+  .tile:nth-child(2)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.010); }
+  .tile:nth-child(3)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.015); }
+  .tile:nth-child(4)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.020); }
+  .tile:nth-child(5)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.025); }
+  .tile:nth-child(6)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.030); }
+  .tile:nth-child(7)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.035); }
+  .tile:nth-child(8)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.040); }
+  .tile:nth-child(9)  { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.045); }
+  .tile:nth-child(10) { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.050); }
+  .tile:nth-child(11) { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.055); }
+  .tile:nth-child(12) { animation: tile-in var(--cycle) infinite both; animation-delay: calc(var(--cycle) * 0.060); }
+
+  /* === KEYFRAMES === */
+  @keyframes cursor-life {
+    0%, 3%    { opacity: 0; transform: translate(-40px, -20px); }
+    6%, 17%   { opacity: 1; transform: translate(0, 0); }
+    20%, 100% { opacity: 0; transform: translate(4px, 2px); }
+  }
+  @keyframes ctx-life {
+    0%, 6%    { opacity: 0; transform: translateY(-4px) scale(.96); }
+    9%, 17%   { opacity: 1; transform: translateY(0) scale(1); }
+    20%, 100% { opacity: 0; transform: translateY(-4px) scale(.98); }
+  }
+  @keyframes ctx-hl {
+    0%, 11%   { background: transparent; color: #e5e7eb; }
+    13%, 17%  { background: var(--accent); color: white; }
+    20%, 100% { background: transparent; color: #e5e7eb; }
+  }
+  @keyframes browser-life {
+    0%, 5%        { opacity: 0; transform: translate(-50%, -50%) scale(.96); }
+    10%, 55%      { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    62%           { opacity: 0; transform: translate(-50%, -50%) scale(1.04); }
+    92%, 100%     { opacity: 0; transform: translate(-50%, -50%) scale(.96); }
+  }
+  @keyframes popup-life {
+    0%, 8%        { opacity: 0; transform: translateY(-10px) scale(.96); }
+    12%, 55%      { opacity: 1; transform: translateY(0) scale(1); }
+    62%           { opacity: 0; transform: translateY(-8px) scale(.96); }
+    100%          { opacity: 0; }
+  }
+  @keyframes q-in {
+    0%, 18% { opacity: 0; transform: translateX(8px); }
+    22%, 58% { opacity: 1; transform: translateX(0); }
+    62%      { opacity: 0; }
+    100%     { opacity: 0; }
+  }
+  @keyframes btn-pulse {
+    0%, 48%  { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+    50%      { box-shadow: 0 0 0 0 rgba(99,102,241,.7); }
+    56%      { box-shadow: 0 0 0 14px rgba(99,102,241,0); }
+    100%     { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+  }
+  @keyframes grid-life {
+    0%, 58%      { opacity: 0; }
+    66%, 90%     { opacity: 1; }
+    96%, 100%    { opacity: 0; }
+  }
+  @keyframes tile-in {
+    0%, 60%    { opacity: 0; transform: scale(.5) translateY(20px); }
+    68%, 92%   { opacity: 1; transform: scale(1) translateY(0); }
+    98%, 100%  { opacity: 0; }
+  }
+
+  /* Count sequence via background trick — use <span class="num" data-n> */
+  .counter {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--accent-2);
+  }
+  .counter::before {
+    content: "0";
+    animation: count-text var(--cycle) infinite steps(1);
+  }
+  @keyframes count-text {
+    0%, 21%  { content: "0"; }
+    23%      { content: "1"; }
+    25%      { content: "2"; }
+    27%      { content: "3"; }
+    29%      { content: "4"; }
+    31%      { content: "5"; }
+    33%      { content: "6"; }
+    35%      { content: "7"; }
+    37%      { content: "8"; }
+    39%      { content: "9"; }
+    41%      { content: "10"; }
+    43%      { content: "11"; }
+    45%      { content: "12"; }
+    58%, 100% { content: "12"; }
+  }
+
+  /* Site thumbnail colors */
+  .st1 { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+  .st2 { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .st3 { background: linear-gradient(135deg, #10b981, #34d399); }
+  .st4 { background: linear-gradient(135deg, #eab308, #facc15); }
+  .st5 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+  .st6 { background: linear-gradient(135deg, #f97316, #fb923c); }
+
+  .q1 { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+  .q2 { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .q3 { background: linear-gradient(135deg, #10b981, #34d399); }
+  .q4 { background: linear-gradient(135deg, #eab308, #facc15); }
+  .q5 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+  .q6 { background: linear-gradient(135deg, #f97316, #fb923c); }
+  .q7 { background: linear-gradient(135deg, #ef4444, #f87171); }
+  .q8 { background: linear-gradient(135deg, #84cc16, #a3e635); }
+
+  .tl1  { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+  .tl2  { background: linear-gradient(135deg, #ec4899, #f472b6); }
+  .tl3  { background: linear-gradient(135deg, #10b981, #34d399); }
+  .tl4  { background: linear-gradient(135deg, #eab308, #facc15); }
+  .tl5  { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+  .tl6  { background: linear-gradient(135deg, #f97316, #fb923c); }
+  .tl7  { background: linear-gradient(135deg, #ef4444, #f87171); }
+  .tl8  { background: linear-gradient(135deg, #84cc16, #a3e635); }
+  .tl9  { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+  .tl10 { background: linear-gradient(135deg, #d946ef, #e879f9); }
+  .tl11 { background: linear-gradient(135deg, #14b8a6, #2dd4bf); }
+  .tl12 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+</style>
+</head>
+<body>
+  <div class="stage-wrap">
+  <div class="stage">
+
+    <!-- Browser window -->
+    <div class="browser">
+      <div class="chrome-bar">
+        <div class="tl"><span></span><span></span><span></span></div>
+        <div class="urlbar">youtube.com</div>
+        <div class="toolbar-icons">
+          <div class="ext-icon"></div>
+        </div>
+      </div>
+      <div class="browser-body">
+        <div class="ctx-menu">
+          <div class="ctx-item">Back</div>
+          <div class="ctx-item">Reload</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item hl"><span class="ctx-icon"></span>Add to MultiView</div>
+          <div class="ctx-sep"></div>
+          <div class="ctx-item">Save video as…</div>
+          <div class="ctx-item">Copy video link</div>
+          <div class="ctx-item">Inspect</div>
+        </div>
+        <div class="cursor"></div>
+        <div class="site-thumbnails">
+          <div class="site-thumb st1"><div class="meta">Champions League Final</div></div>
+          <div class="site-thumb st2"><div class="meta">Live: Markets</div></div>
+          <div class="site-thumb st3"><div class="meta">F1 Monaco GP</div></div>
+          <div class="site-thumb st4"><div class="meta">NBA Finals</div></div>
+          <div class="site-thumb st5"><div class="meta">Twitch: Esports</div></div>
+          <div class="site-thumb st6"><div class="meta">News Live</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup">
+      <div class="popup-hdr">
+        <span class="popup-title">MultiView</span>
+        <span class="popup-count"><span class="counter"></span> / 32</span>
+        <span class="pro-pill">Pro</span>
+      </div>
+      <div class="popup-actions">
+        <div class="btn primary">▦ Tile</div>
+        <div class="btn">Close</div>
+        <div class="btn">Queue</div>
+      </div>
+      <div class="popup-paste">
+        <div class="paste-input">Paste video URL…</div>
+        <div class="add-btn">Add</div>
+      </div>
+      <div class="queue">
+        <div class="queue-item"><div class="queue-thumb q1"></div><div class="queue-info"><div class="queue-name">Champions League Final</div><div class="queue-site">youtube</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q2"></div><div class="queue-info"><div class="queue-name">Live: S&amp;P 500 Ticker</div><div class="queue-site">generic</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q3"></div><div class="queue-info"><div class="queue-name">F1 Monaco Grand Prix</div><div class="queue-site">youtube</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q4"></div><div class="queue-info"><div class="queue-name">NBA Finals Game 7</div><div class="queue-site">youtube</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q5"></div><div class="queue-info"><div class="queue-name">shroud — Valorant</div><div class="queue-site">twitch</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q6"></div><div class="queue-info"><div class="queue-name">BBC News Live</div><div class="queue-site">youtube</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q7"></div><div class="queue-info"><div class="queue-name">Bloomberg Markets</div><div class="queue-site">generic</div></div></div>
+        <div class="queue-item"><div class="queue-thumb q8"></div><div class="queue-info"><div class="queue-name">Premier League Highlights</div><div class="queue-site">youtube</div></div></div>
+      </div>
+    </div>
+
+    <!-- Tile grid (payoff) -->
+    <div class="tile-grid">
+      <div class="tile tl1"><div class="label">Champions League</div></div>
+      <div class="tile tl2"><div class="label">Markets Live</div></div>
+      <div class="tile tl3"><div class="label">F1 Monaco GP</div></div>
+      <div class="tile tl4"><div class="label">NBA Finals</div></div>
+      <div class="tile tl5"><div class="label">Valorant</div></div>
+      <div class="tile tl6"><div class="label">BBC News</div></div>
+      <div class="tile tl7"><div class="label">Bloomberg</div></div>
+      <div class="tile tl8"><div class="label">Premier League</div></div>
+      <div class="tile tl9"><div class="label">Crypto Live</div></div>
+      <div class="tile tl10"><div class="label">Counter-Strike</div></div>
+      <div class="tile tl11"><div class="label">Formula E</div></div>
+      <div class="tile tl12"><div class="label">Al Jazeera</div></div>
+    </div>
+
+  </div>
+  </div>
+  <script>
+    (function fit() {
+      const w = 1280, h = 720;
+      function update() {
+        const s = Math.min(window.innerWidth / w, window.innerHeight / h, 1);
+        document.documentElement.style.setProperty('--fit', s);
+      }
+      window.addEventListener('resize', update);
+      update();
+    })();
+  </script>
+</body>
+</html>

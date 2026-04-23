@@ -55,7 +55,10 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "multiview@extension"
+      "id": "multiview@extension",
+      "data_collection_permissions": {
+        "required": ["personallyIdentifyingInfo", "financialAndPaymentInfo"]
+      }
     }
   }
 }
