@@ -159,6 +159,21 @@
       font-family: inherit;
     }
     .upsell button:hover { background: #4f46e5; }
+    .audio-row {
+      padding: 8px 14px;
+      border-bottom: 1px solid #222;
+    }
+    .audio-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .audio-btn.muted { background: #2a2a2a; color: #d4d4d8; }
+    .audio-btn.live { background: #064e3b; border-color: #10b981; color: #6ee7b7; }
+    .audio-btn.live:hover { background: #065f46; }
   </style>
 </head>
 <body>
@@ -177,6 +192,12 @@
     <button class="btn" id="closeTiles">Close Tiles</button>
     <button class="btn" id="openGrid">Queue</button>
     <button class="btn danger" id="clearAll">Clear All</button>
+  </div>
+  <div class="audio-row" id="audioRow" hidden>
+    <button class="btn audio-btn" id="audioToggle">
+      <span id="audioIcon">&#128264;</span>
+      <span id="audioLabel">Unmute all</span>
+    </button>
   </div>
   <div class="paste-row">
     <input class="paste-input" id="pasteUrl" placeholder="Paste video URL..." />

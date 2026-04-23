@@ -6,6 +6,10 @@ const countEl = document.getElementById('count');
 const pasteInput = document.getElementById('pasteUrl');
 const tierPill = document.getElementById('tierPill');
 const upsellEl = document.getElementById('upsell');
+const audioRow = document.getElementById('audioRow');
+const audioBtn = document.getElementById('audioToggle');
+const audioIcon = document.getElementById('audioIcon');
+const audioLabel = document.getElementById('audioLabel');
 
 let licenseState = { tier: 'free', limit: 4 };
 
@@ -24,6 +28,23 @@ async function refreshLicense() {
 
 function showUpsell(show) {
   upsellEl.classList.toggle('visible', !!show && licenseState.tier === 'free');
+}
+
+async function refreshAudioRow() {
+  const r = await api.runtime.sendMessage({ action: 'getMuteState' });
+  if (!r?.anyTiles) { audioRow.hidden = true; return; }
+  audioRow.hidden = false;
+  if (r.allMuted) {
+    audioIcon.innerHTML = '&#128264;'; // speaker (muted via lack of waves)
+    audioLabel.textContent = 'Unmute all';
+    audioBtn.className = 'btn audio-btn muted';
+    audioBtn.dataset.next = 'unmute';
+  } else {
+    audioIcon.innerHTML = '&#128266;'; // speaker with waves
+    audioLabel.textContent = 'Mute all';
+    audioBtn.className = 'btn audio-btn live';
+    audioBtn.dataset.next = 'mute';
+  }
 }
 
 async function loadQueue() {
@@ -76,6 +97,13 @@ document.getElementById('openGrid').addEventListener('click', async () => {
 document.getElementById('tileWindows').addEventListener('click', async () => {
   await api.runtime.sendMessage({ action: 'tileWindows' });
   window.close();
+});
+
+// Mute / unmute all tiles
+audioBtn.addEventListener('click', async () => {
+  const next = audioBtn.dataset.next === 'mute' ? 'muteAll' : 'unmuteAll';
+  await api.runtime.sendMessage({ action: next });
+  refreshAudioRow();
 });
 
 // Close tiles
@@ -180,4 +208,5 @@ function escapeAttr(str) {
 (async () => {
   await refreshLicense();
   await loadQueue();
+  await refreshAudioRow();
 })();

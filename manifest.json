@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "MultiView",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Watch up to 32 videos simultaneously in a grid or tiled windows",
-  "permissions": ["storage", "contextMenus", "activeTab"],
+  "permissions": ["storage", "contextMenus", "activeTab", "tabs"],
   "host_permissions": ["https://extensionpay.com/*"],
   "background": {
     "service_worker": "src/background/background.js"

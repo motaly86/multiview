@@ -111,6 +111,33 @@ async function handleMessage(msg) {
       }
       return { ok: true };
     }
+    case 'getMuteState': {
+      // Returns { anyTiles, allMuted } so the popup can render the right label.
+      var r = await api.storage.local.get('multiview_tile_windows');
+      var ids = r.multiview_tile_windows || [];
+      if (ids.length === 0) return { ok: true, anyTiles: false, allMuted: true };
+      var allMuted = true;
+      for (var i = 0; i < ids.length; i++) {
+        try {
+          var tabs = await api.tabs.query({ windowId: ids[i] });
+          if (tabs[0] && tabs[0].mutedInfo && !tabs[0].mutedInfo.muted) { allMuted = false; break; }
+        } catch (e) { /* window may have closed */ }
+      }
+      return { ok: true, anyTiles: true, allMuted: allMuted };
+    }
+    case 'muteAll':
+    case 'unmuteAll': {
+      var muted = msg.action === 'muteAll';
+      var r = await api.storage.local.get('multiview_tile_windows');
+      var ids = r.multiview_tile_windows || [];
+      for (var i = 0; i < ids.length; i++) {
+        try {
+          var tabs = await api.tabs.query({ windowId: ids[i] });
+          if (tabs[0]) await api.tabs.update(tabs[0].id, { muted: muted });
+        } catch (e) { /* window may have closed — skip */ }
+      }
+      return { ok: true, muted: muted };
+    }
     case 'amIaTile': {
       var tileResult = await api.storage.local.get('multiview_tile_windows');
       var tileIds = tileResult.multiview_tile_windows || [];
@@ -284,6 +311,12 @@ async function tileWindows() {
         height: cellH,
       });
       windowIds.push(win.id);
+      // Auto-mute each tile on open — otherwise 4-32 streams all blast audio.
+      // User unmutes one (or all) manually via the popup or Chrome's tab icon.
+      try {
+        var tabs = await api.tabs.query({ windowId: win.id });
+        if (tabs[0]) await api.tabs.update(tabs[0].id, { muted: true });
+      } catch (e) { /* best effort */ }
     } catch (e) {
       console.warn('MultiView: failed to create window for', video.url, e);
     }
